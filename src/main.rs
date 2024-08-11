@@ -1,5 +1,9 @@
-use gtk::prelude::*;
-use gtk::{glib, Application, ApplicationWindow, Button};
+
+use gtk::{prelude::*, Label};
+use gtk::{glib, Application, ApplicationWindow, Button,Box as GtkBox,Orientation};
+use std::rc::Rc;
+use std::cell::RefCell;
+
 
 const APP_ID: &str = "org.gtk_rs.HelloWorld3";
 
@@ -15,33 +19,64 @@ fn main() -> glib::ExitCode {
 }
 
 fn build_ui(app: &Application) {
-    // Create a button with label and margins
-    let button = Button::builder()
-        .label("Press Me!")
-        .height_request(60)
-        .width_request(60)
-        .margin(20)
+    let number = Rc::new(RefCell::new(0));
+
+    let label = Label::builder()
+        .label(&number.borrow().to_string())
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
         .build();
 
-    // Connect to "clicked" signal of `button`
-    button.connect_clicked(|button| {
-        if button.label().as_deref() == Some("Hello World!"){
-        button.set_label("Press Me!");
-        }else {
-            // Set the label to "Hello World!" after the button has been clicked on
-            button.set_label("Hello World!");
-        }
+    let increment = Button::builder()
+        .label("Increment")
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
+        .build();
+
+    let number_clone = Rc::clone(&number);
+    let label_clone = label.clone();
+
+    increment.connect_clicked(move |_| {
+        *number_clone.borrow_mut() += 1;
+        label_clone.set_label(&number_clone.borrow().to_string());
     });
 
+    let decrement = Button::builder()
+        .label("Decrement")
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
+        .build();
+
+    let number_clone = Rc::clone(&number);
+    let label_clone = label.clone();
+
+    decrement.connect_clicked(move |_| {
+        *number_clone.borrow_mut() -= 1;
+        label_clone.set_label(&number_clone.borrow().to_string());
+    });
+
+    let vbox = GtkBox::new(Orientation::Vertical, 10);
+    label.show();
+    increment.show();
+    decrement.show();
+    vbox.add(&label);
+    vbox.add(&increment);
+    vbox.add(&decrement);
+    vbox.show();
     // Create a window with a default size
     let window = ApplicationWindow::builder()
         .application(app)
         .title("My GTK App")
         .default_width(300) // Set a default width
         .default_height(200) // Set a default height
-        .child(&button)
+        .child(&vbox)
         .build();
-    button.show();
-    // Present window
+
     window.present();
 }
